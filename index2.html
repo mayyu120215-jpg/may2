@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Game 2 – Cone Relay Challenge</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Pacifico&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{margin:0;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;background:#fff7e0;touch-action:manipulation}
+@keyframes sw{0%,100%{transform:rotate(-35deg)}50%{transform:rotate(35deg)}}
+@keyframes kn{0%,100%{transform:rotate(0)}50%{transform:rotate(-80deg)}}
+@keyframes opn{0%,100%{transform:rotate(0)}50%{transform:rotate(24deg)}}
+@keyframes opn2{0%,100%{transform:rotate(0)}50%{transform:rotate(-24deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+@keyframes slide{0%,100%{transform:translateX(-12px)}50%{transform:translateX(12px)}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.a{animation-duration:.6s;animation-iteration-count:infinite;animation-timing-function:ease-in-out}
+.sw{animation-name:sw}.kn{animation-name:kn;animation-duration:.5s}.opn{animation-name:opn}.opn2{animation-name:opn2}
+.bob{animation-name:bob;animation-duration:.3s}.hop{animation-name:hop;animation-duration:.7s}.slide{animation-name:slide;animation-duration:.9s}
+.pop{animation:pop .3s ease-out both}
+.btn{border-radius:1.25rem;font-weight:900;padding:.9rem 1.6rem;min-height:56px;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.btn:active{transform:translateY(4px);box-shadow:none}.btn:disabled{opacity:.4}
+
+html,body{font-family:Kalam,"Segoe UI",system-ui,cursive;color:#5b2333;
+background-color:#fff;background-image:linear-gradient(rgba(244,100,110,.4) 50%,transparent 50%),linear-gradient(90deg,rgba(244,100,110,.4) 50%,transparent 50%);background-size:56px 56px}
+h1,h2,h3{font-family:Pacifico,cursive;font-weight:400!important;color:#d6213f!important}
+h3{color:#db2777!important}
+.paper{background:#fffaf0;border-radius:2.2rem;box-shadow:0 0 0 5px #fff,0 10px 26px rgba(150,40,60,.25);margin:14px auto}
+.rounded-3xl.bg-white{border:3px dashed #f9a8d4;box-shadow:none}
+.hl{background:linear-gradient(transparent 50%,#fde68a 50%);padding:0 .25em;border-radius:.4em}
+[class*="text-slate-"]{color:#5b2333!important}
+.btn{border-radius:1.6rem}
+</style></head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+const MOVES=[
+{n:1,name:"Normal Running",t:"run",c:"bg-orange-400",d:"Run to the traffic cone, go around it, and run back to the starting line."},
+{n:2,name:"Crab Walking",t:"crab",c:"bg-pink-500",d:"Move on your hands and feet with your stomach facing upward. Travel to the cone and return."},
+{n:3,name:"Two-Foot Hopping",t:"hop",c:"bg-emerald-500",d:"Keep both feet together and hop to the cone and back. Arms straight out in front, like a zombie!"},
+{n:4,name:"Sideways Running",t:"side",c:"bg-pink-500",d:"Move sideways to the cone and return. Arms open wide. Keep facing sideways throughout."},
+{n:5,name:"High Knees",t:"knees",c:"bg-violet-500",d:"Run to the cone and back while lifting your knees high with every step."},
+{n:6,name:"Backward Walking",t:"back",c:"bg-amber-500",d:"Carefully walk backward toward the cone, then turn around and walk normally back to the starting line."}];
+const SAFE="Safety: walk backward slowly, keep the course clear, and have a spotter supervising.";
+const fmt=ms=>{const c=Math.floor(ms/10)%100,s=Math.floor(ms/1000)%60,m=Math.floor(ms/60000);return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}.${String(c).padStart(2,"0")}`};
+
+const SK="#f6d0b0",LN="rgba(90,30,60,.3)",PANT="#8b2e4a";
+function Limb({x,y,len,cls,delay,col,rot,w=10,hand}){return <g className={"a "+(cls||"")} style={{transformOrigin:`${x}px ${y}px`,animationDelay:delay||"0s",transform:rot?`rotate(${rot}deg)`:undefined}}><rect x={x-w/2} y={y} width={w} height={len} rx="2" fill={col} stroke={LN}/>{hand&&<rect x={x-w/2} y={y+len-8} width={w} height="8" rx="2" fill={SK} stroke={LN}/>}</g>}
+const Head=({x,y,r=0})=><g transform={`translate(${x},${y}) rotate(${r} 14 14)`}><rect width="28" height="28" rx="3" fill={SK} stroke={LN}/><rect width="28" height="11" rx="3" fill="#4a2c20"/><rect width="4" height="19" rx="1" fill="#4a2c20"/><rect x="24" width="4" height="19" rx="1" fill="#4a2c20"/>
+<circle cx="9" cy="16" r="2.3" fill="#222"/><circle cx="19" cy="16" r="2.3" fill="#222"/><circle cx="9.8" cy="15.2" r=".8" fill="#fff"/><circle cx="19.8" cy="15.2" r=".8" fill="#fff"/>
+<ellipse cx="5" cy="21" rx="3" ry="2" fill="#f9a8b8"/><ellipse cx="23" cy="21" rx="3" ry="2" fill="#f9a8b8"/><path d="M10 22 Q14 27 18 22" stroke="#6b2d2d" strokeWidth="1.6" fill="none" strokeLinecap="round"/></g>;
+function Fig({t,s=150}){
+ const sh={run:"#f472b6",crab:"#a78bfa",hop:"#f9a8d4",side:"#c084fc",knees:"#fb7185",back:"#d8a0e8"}[t];
+ const ground=<ellipse cx="68" cy="118" rx="46" ry="5" fill="#5e9a4a" opacity=".45"/>;
+ if(t==="crab")return <svg viewBox="0 0 140 130" width={s*1.15} height={s}>{ground}
+ <g className="a bob"><polyline points="88,66 108,86 110,112" fill="none" stroke={PANT} strokeWidth="11"/><polyline points="84,70 98,92 98,112" fill="none" stroke={PANT} strokeWidth="11" opacity=".7"/>
+ <rect x="38" y="56" width="54" height="22" rx="3" fill={sh} stroke={LN} transform="rotate(-6 65 67)"/>
+ <polyline points="52,70 46,92 46,110" fill="none" stroke={sh} strokeWidth="10"/><rect x="40" y="108" width="12" height="9" rx="2" fill={SK} stroke={LN}/>
+ <Head x={8} y={40} r={15}/></g></svg>;
+ const torso=<g><rect x="48" y="36" width="24" height="40" rx="3" fill={sh} stroke={LN}/><rect x="66" y="37" width="5" height="38" fill="rgba(90,30,60,.18)"/></g>;
+ const legs=c=>[54,66].map((x,i)=><Limb key={x} x={x} y={76} len={40} w={11} col={PANT} cls={c&&(c==="opn"?(i?"opn2":"opn"):c)} delay={i?"-.3s":"0s"}/>);
+ let body;
+ if(t==="hop")body=<g className="a hop">{legs()}{torso}<Limb x={66} y={42} len={34} w={9} col={sh} rot={-90} hand/><Limb x={66} y={51} len={34} w={9} col={sh} rot={-90} hand/><Head x={46} y={6}/></g>;
+ else if(t==="side")body=<g className="a slide">{legs("opn")}{torso}<Limb x={44} y={42} len={32} w={9} col={sh} rot={95} hand/><Limb x={76} y={42} len={32} w={9} col={sh} rot={-95} hand/><Head x={46} y={6}/></g>;
+ else body=<g className="a bob" transform={t==="back"?"translate(120,0) scale(-1,1)":undefined}>{legs(t==="knees"?"kn":"sw")}{torso}
+  <Limb x={44} y={42} len={30} w={9} col={sh} cls="sw" delay="-.3s" hand/><Limb x={76} y={42} len={30} w={9} col={sh} cls="sw" hand/><Head x={46} y={6}/></g>;
+ return <svg viewBox="0 0 120 130" width={s*.92} height={s}>{ground}{t==="back"&&<text x="2" y="14" fontSize="16">⬅️</text>}{body}</svg>;
+}
+function Cone({s=44}){return <svg viewBox="0 0 60 70" width={s} height={s*1.15}><ellipse cx="30" cy="64" rx="26" ry="6" fill="#ea580c"/><path d="M30 4 L50 62 L10 62Z" fill="#fb923c"/><path d="M24 24 L36 24 L40 38 L20 38Z" fill="#fff"/></svg>}
+
+const Card=({t,children,c="text-pink-600"})=><div className="bg-white rounded-3xl p-5 shadow"><h3 className={"font-black text-3xl mb-2 "+c}>{t}</h3><div className="text-xl md:text-2xl font-semibold text-slate-700 space-y-2">{children}</div></div>;
+
+function Guide({n,setN}){return <div className="max-w-5xl paper p-4 space-y-4 pop">
+ <div className="text-center"><div className="text-4xl">🌼 ✨ 👑 🍒 🎀 ✨ 🌼</div><div className="inline-block bg-pink-500 text-white font-black text-xl px-5 py-1 rounded-full">GAME 2</div>
+ <h1 className="text-5xl md:text-7xl leading-tight mt-2">Cone Relay <span className="hl">Challenge!</span></h1>
+ <p className="text-xl md:text-3xl font-bold text-slate-600 mt-2"><span className="hl">“Run, Move, and Race Together!”</span> 💗</p>
+ <p className="text-lg md:text-xl font-bold text-slate-500 mt-1">8–10 minutes · Teams of {n} · 1 traffic cone per team</p></div>
+ <Card t="Setup">
+  <p>1. Divide everyone into teams of {n}. Each team lines up behind its starting line.</p>
+  <p>2. Place ONE cone 8–10 meters from each team — the same distance for every team.</p>
+  <div className="flex items-center gap-2 bg-emerald-100 rounded-2xl px-3 py-3 text-sm md:text-lg font-black"><span>START LINE</span><div className="flex-1 border-t-4 border-dashed border-sky-500 text-center"><span className="bg-emerald-100 px-1 relative -top-4">8–10 m</span></div><Cone/><span>CONE</span></div></Card>
+ <div className="flex items-center justify-between"><h2 className="text-3xl md:text-4xl font-black text-slate-700">Movements</h2>
+  <div className="flex rounded-2xl overflow-hidden border-2 border-pink-300 font-black">{[5,6].map(k=><button key={k} onClick={()=>setN(k)} className={"px-4 py-2 "+(n===k?"bg-pink-400 text-white":"bg-white text-pink-600")}>{k} players</button>)}</div></div>
+ <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">{MOVES.slice(0,n).map(m=><div key={m.n} className="bg-white rounded-3xl shadow-lg overflow-hidden">
+  <div className={m.c+" text-white px-4 py-2 font-black text-2xl"}>Player {m.n}</div>
+  <div className="grid place-items-center bg-green-100 pt-2"><Fig t={m.t} s={130}/></div>
+  <div className="p-3"><div className="font-black text-xl md:text-2xl text-slate-800">{m.name}</div><p className="font-semibold text-slate-600 text-sm md:text-lg">{m.d}</p>{m.n===6&&<p className="mt-1 text-sm md:text-base font-black text-red-600">⚠️ {SAFE}</p>}</div></div>)}</div>
+ <Card t="How to Play" c="text-pink-600">
+  <p>1. When the host says “GO!”, Player 1 starts.</p>
+  <p>2. Reach the cone, go around it, and return to the starting line using your movement.</p>
+  <p>3. Give the next teammate a high-five. The next player can only start after the high-five.</p>
+  <p>4. Continue until all {n} players have finished.</p>
+  <div className="bg-red-500 text-white rounded-2xl p-3 text-center text-2xl md:text-4xl font-black">🖐️ NO HIGH-FIVE = NO NEXT PLAYER!</div></Card>
+ <Card t="Winning & Penalties" c="text-emerald-600">
+  <p><b className="hl">The fastest team wins!</b> The first team with all {n} players finished wins.</p>
+  <p>📍 <b>Missed cone:</b> go back and go around it correctly.</p>
+  <p>🔁 <b>Wrong movement:</b> repeat the affected section.</p>
+  <p>🚫 <b>Early start:</b> return to the starting line and wait for the high-five.</p></Card>
+ <div className="bg-gradient-to-t from-green-300 to-transparent rounded-b-[2rem] -mx-4 -mb-4 pt-6 pb-5 text-center"><div className="text-5xl">🧺 🎂 🍓 🍇 🧃</div><div className="hl text-2xl md:text-3xl font-bold mt-2" style={{fontFamily:"Pacifico"}}>Can’t wait to play with you! 💕</div><div className="text-3xl mt-1">🌼🌿🌼🌿🌼</div></div></div>}
+
+function Timer(){const [teams,setT]=useState(3);const [ph,setPh]=useState("idle");const [ms,setMs]=useState(0);const [res,setRes]=useState({});const raf=useRef(0),t0=useRef(0);
+ const done=Object.keys(res).length;
+ const stop=()=>cancelAnimationFrame(raf.current);
+ useEffect(()=>stop,[]);
+ const start=()=>{setRes({});setMs(0);setPh("run");t0.current=performance.now();const l=()=>{setMs(performance.now()-t0.current);raf.current=requestAnimationFrame(l)};raf.current=requestAnimationFrame(l)};
+ const finish=i=>{if(ph!=="run"||res[i]!==undefined)return;const t=performance.now()-t0.current;const nr={...res,[i]:t};setRes(nr);if(Object.keys(nr).length===teams){stop();setMs(t);setPh("done")}};
+ const reset=()=>{stop();setPh("idle");setMs(0);setRes({})};
+ const rank=Object.entries(res).map(([i,t])=>({i:+i,t})).sort((a,b)=>a.t-b.t);
+ return <div className="max-w-4xl paper p-4 space-y-4 pop">
+ <div className="flex items-center justify-between bg-white rounded-2xl p-3 shadow"><span className="font-black text-xl text-slate-700">Teams</span>
+  <div className="flex gap-2">{[2,3,4,5,6].map(k=><button key={k} disabled={ph==="run"} onClick={()=>{setT(k);reset()}} className={"w-12 h-12 rounded-xl font-black text-xl "+(teams===k?"bg-pink-400 text-white":"bg-pink-100 text-pink-600")}>{k}</button>)}</div></div>
+ <div className="bg-white rounded-3xl p-6 text-center"><div className="font-mono font-black text-rose-600 text-6xl sm:text-8xl md:text-9xl tabular-nums">{fmt(ms)}</div></div>
+ <div className="grid grid-cols-2 gap-3"><button className="btn bg-emerald-500 text-white text-3xl" disabled={ph==="run"} onClick={start}>▶ START</button><button className="btn bg-red-500 text-white text-3xl" onClick={reset}>↺ RESET</button></div>
+ <p className="text-center font-black text-slate-600 text-xl">{ph==="idle"?"Press START, then tap each team as it finishes.":ph==="run"?"Tap a team the moment its last player returns:":"All teams finished!"}</p>
+ <div className="grid grid-cols-2 md:grid-cols-3 gap-3">{Array.from({length:teams},(_,i)=>{const r=res[i];return <button key={i} disabled={ph!=="run"||r!==undefined} onClick={()=>finish(i)} className={"btn text-2xl "+(r!==undefined?"!opacity-100 bg-slate-200 text-slate-500":"bg-pink-500 text-white")}>Team {i+1}{r!==undefined&&<div className="font-mono text-lg">✓ {fmt(r)}</div>}</button>})}</div>
+ {rank.length>0&&<div className="bg-white rounded-3xl p-4 shadow"><h3 className="font-black text-3xl text-pink-600 mb-2">Results</h3>
+  {rank.map((r,k)=><div key={r.i} className={"flex items-center gap-3 rounded-2xl px-4 py-3 mb-2 text-2xl font-black "+(k===0?"bg-yellow-300":"bg-pink-50")}><span className="w-10">{["🥇","🥈","🥉"][k]||k+1}</span><span className="flex-1">Team {r.i+1}</span><span className="font-mono">{fmt(r.t)}</span></div>)}
+  {rank.length>0&&<p className="text-center font-black text-3xl text-emerald-600 mt-2">🏆 Fastest so far: Team {rank[0].i+1}!</p>}</div>}</div>}
+
+function App(){const [tab,setTab]=useState(0);const [n,setN]=useState(5);
+ return <div className="min-h-screen pb-6">
+ <nav className="sticky top-0 z-10 grid grid-cols-2 gap-2 p-2 bg-white/90 shadow rounded-b-3xl">{["📖 Instructions","⏱️ Timer"].map((x,i)=><button key={i} onClick={()=>setTab(i)} className={"btn !py-2 text-xl md:text-2xl "+(tab===i?"bg-pink-500 text-white":"bg-slate-100 text-slate-600")}>{x}</button>)}</nav>
+ {tab===0?<Guide n={n} setN={setN}/>:<Timer/>}</div>}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script></body></html>
